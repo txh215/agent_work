@@ -56,4 +56,23 @@ def calculate_travel_budget(expenses: str) -> str:
         parts = expenses.split(',')
         total_cost = 0.0
         details = []
-      
+            part = part.strip()
+            # 从字符串中提取数字，采用简单的方法
+            # 对于复杂情况可能需要更健壮的解析
+            numbers = [float(s) for s in part.split() if s.replace('.', '', 1).isdigit()]
+            if numbers:
+                cost = numbers[0]
+                total_cost += cost
+                # 尝试提取费用名称，如果分割后有内容
+                item_name = part.split()[0] if part.split() and not part.split()[0].replace('.', '', 1).isdigit() else '项目'
+                details.append(f"{item_name}: {cost:.2f}元") # 格式化为两位小数
+            else:
+                details.append(f"无法解析 '{part}'")
+        
+        if not details:
+            return "错误：没有找到有效的费用项目进行计算。"
+
+        return f"您的旅行总预算为 {total_cost:.2f} 元。详细明细：{'; '.join(details)}。"
+    except Exception as e:
+        return f"计算预算时出错：{str(e)}。请提供逗号分隔的费用格式，例如 '机票2500, 酒店3000'。"
+
