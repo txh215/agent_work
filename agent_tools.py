@@ -76,3 +76,25 @@ def calculate_travel_budget(expenses: str) -> str:
     except Exception as e:
         return f"计算预算时出错：{str(e)}。请提供逗号分隔的费用格式，例如 '机票2500, 酒店3000'。"
 
+# Knowledge Base Tool: Tourism Info Retriever
+def setup_tourism_knowledge_base():
+    """设置用于旅游信息的 FAISS 向量存储。"""
+    try:
+        # 确保您的 'tourism_info.txt' 文件存在且编码为 UTF-8
+        loader = TextLoader("tourism_info.txt", encoding="utf-8")
+        documents = loader.load()
+        text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+        docs = text_splitter.split_documents(documents)
+        
+        # 使用 HuggingFaceEmbeddings 作为演示的常用选择。
+        # 您可能需要安装 'sentence-transformers' 包。
+        embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        
+        db = FAISS.from_documents(docs, embeddings)
+        return RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=db.as_retriever())
+    except FileNotFoundError:
+        print("错误：未找到 'tourism_info.txt' 文件。请按照 README 中的说明创建它。")
+        return None
+    except Exception as e:
+        print(f"设置旅游知识库时出错：{e}")
+        return None
