@@ -46,3 +46,14 @@ def get_current_weather(location: str) -> str:
         return f"{current_date} {location} 的天气预报：有雨，最高气温 26°C，最低气温 19°C。60% 的降水概率。"
     else:
         return f"抱歉，目前没有 {location} 的天气数据。请尝试查询北京、上海、东京或大阪。"
+# Local Function Tool: Travel Budget Calculator
+def calculate_travel_budget(expenses: str) -> str:
+    """
+    根据逗号分隔的费用列表计算旅行总预算。
+    示例输入："机票2500, 酒店3000, 餐饮1200, 交通500"
+    """
+    try:
+        parts = expenses.split(',')
+        total_cost = 0.0
+        details = []
+      
