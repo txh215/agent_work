@@ -98,3 +98,65 @@ def setup_tourism_knowledge_base():
     except Exception as e:
         print(f"设置旅游知识库时出错：{e}")
         return None
+# 初始化知识库
+qa_chain = setup_tourism_knowledge_base()
+if qa_chain is None:
+    print("旅游知识库初始化失败。TourismInfoRetriever 工具将不可用。")
+
+
+tools = [
+    Tool(
+        name="WeatherTool",
+        func=get_current_weather,
+        description="获取指定地点的实时天气预报。输入应为城市名称，例如'北京'、'东京'、'上海'、'大阪'。",
+    ),
+    Tool(
+        name="TravelBudgetCalculator",
+        func=calculate_travel_budget,
+        description="计算旅行总预算。输入应为逗号分隔的费用列表，例如'机票2500, 酒店3000, 餐饮1200, 交通500'。",
+    ),
+]
+
+# 如果成功初始化，则添加 TourismInfoRetriever 工具
+if qa_chain:
+    tools.append(
+        Tool(
+            name="TourismInfoRetriever",
+            func=qa_chain.run, # qa_chain.run 期望字符串输入并返回字符串输出
+            description="查询热门旅游目的地的景点信息和概况。输入应为地点名称或相关关键词，例如'北京景点'、'上海旅游'、'东京有什么好玩的'。",
+        )
+    )
+
+# --- 3. Initialize Memory ---
+memory = ConversationBufferMemory(
+    memory_key="chat_history",
+    return_messages=True # 返回消息对象列表
+)
+
+# --- 4. Initialize Agent ---
+# 初始化 Agent 执行器
+agent_executor = initialize_agent(
+    tools=tools,
+    llm=llm,
+    memory=memory, # 传入记忆模块
+    agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
+    verbose=True, # 设置为 True 可以看到 Agent 的思考过程
+    handle_parsing_errors=True # 帮助处理 LLM 可能输出的格式错误的动作
+)
+
+# --- 5. Run the Agent ---
+if __name__ == "__main__":
+    print("你好！我是你的旅行规划助手。有什么可以帮助你的吗？")
+    while True:
+        query = input("\n请输入你的问题（或输入'exit'退出）：")
+        if query.lower() == 'exit':
+            print("再见！祝你旅途愉快！")
+            break
+        try:
+            # invoke 方法的输入通常是一个字典，键为 "input"
+            result = agent_executor.invoke({"input": query})
+            # 确保打印的是 output 字段
+            print(f"助手：{result['output']}")
+        except Exception as e:
+            print(f"发生错误：{e}")
+            print("请尝试重新措辞你的问题，或者输入'exit'退出。")
